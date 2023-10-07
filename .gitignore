@@ -1,0 +1,8 @@
+
+dragonruby-publish.exe
+/samples/*
+/tmp/*
+/docs/*
+/logs/*
+/.vs/*
+/.dragonruby/*
