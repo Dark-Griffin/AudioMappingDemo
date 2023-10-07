@@ -28,6 +28,21 @@ def tick args
   args.state.audio_map[:sound3] = { path: 'sounds/tada.wav', x: 700, y: 100, delay: 4.0, angle: 0.0, distance: 0.0, max_distance: 100 }
   args.state.audio_map[:sound4] = { path: 'sounds/tink.wav', x: 650, y: 400, delay: 0.5, angle: 0.0, distance: 0.0, max_distance: 100 }
 
+  
+  # for each audio in audio_map, set the listening angle from the player position
+  args.state.audio_map.each do |key, value|
+    # calculate the angle from the sound to the listener
+    value[:angle] = Math.atan2(args.state.listener.y - value[:y], args.state.listener.x - value[:x])
+    # also calculate the distance from the listener to the sound
+    value[:distance] = Math.sqrt((value[:x] - args.state.listener.x) ** 2 + (value[:y] - args.state.listener.y) ** 2)
+  end
+
+  # todo for me
+  # - figure out listening pan from angle of sound relative to the listener
+  # - figure out listening volume from distance of sound relative to the listener
+  # - output sounds and play them based on the above calculations
+  # - keep track of ticks per sound so we can play the sounds at the specified delay times
+
   # #############################################
   # interactions
 
@@ -37,13 +52,6 @@ def tick args
     args.state.listener.y = args.inputs.mouse.click.point.y
   end
 
-  # for each audio in audio_map, set the listening angle from the player position
-  args.state.audio_map.each do |key, value|
-    # calculate the angle from the sound to the listener
-    value[:angle] = Math.atan2(args.state.listener.y - value[:y], args.state.listener.x - value[:x])
-    # also calculate the distance from the listener to the sound
-    value[:distance] = Math.sqrt((value[:x] - args.state.listener.x) ** 2 + (value[:y] - args.state.listener.y) ** 2)
-  end
 
 
   # #############################################
