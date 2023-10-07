@@ -21,12 +21,12 @@ def tick args
   # lets define some sounds and where they are in the world
   # we can define this with a sound file path and a position x and y to place them on our map
   # we also define a playback delay, this will control how often the sound is played from that point in space.
-  args.state.audio_map[:sound1] = { path: 'sounds/splash.wav', x: 100, y: 100, delay: 2.0 }
-  args.state.audio_map[:sound2] = { path: 'sounds/spring.wav', x: 350, y: 400, delay: 1.0 }
-  args.state.audio_map[:sound3] = { path: 'sounds/tada.wav', x: 700, y: 100, delay: 4.0 }
-  args.state.audio_map[:sound4] = { path: 'sounds/tink.wav', x: 650, y: 400, delay: 0.5 }
-
-  
+  # each will need an angle value for use later in the system when we calculate the angle from the listener to the sound, and a distance value to control volume.
+  # also, we need a max cutoff distance, this is used to give a range for "I can hear this sound", and if distance is greater than this, we don't play the sound.
+  args.state.audio_map[:sound1] = { path: 'sounds/splash.wav', x: 100, y: 100, delay: 2.0, angle: 0.0, distance: 0.0, max_distance: 100 }
+  args.state.audio_map[:sound2] = { path: 'sounds/spring.wav', x: 350, y: 400, delay: 1.0, angle: 0.0, distance: 0.0, max_distance: 100 }
+  args.state.audio_map[:sound3] = { path: 'sounds/tada.wav', x: 700, y: 100, delay: 4.0, angle: 0.0, distance: 0.0, max_distance: 100 }
+  args.state.audio_map[:sound4] = { path: 'sounds/tink.wav', x: 650, y: 400, delay: 0.5, angle: 0.0, distance: 0.0, max_distance: 100 }
 
   # #############################################
   # interactions
@@ -37,6 +37,15 @@ def tick args
     args.state.listener.y = args.inputs.mouse.click.point.y
   end
 
+  # for each audio in audio_map, set the listening angle from the player position
+  args.state.audio_map.each do |key, value|
+    # calculate the angle from the sound to the listener
+    value[:angle] = Math.atan2(args.state.listener.y - value[:y], args.state.listener.x - value[:x])
+    # also calculate the distance from the listener to the sound
+    value[:distance] = Math.sqrt((value[:x] - args.state.listener.x) ** 2 + (value[:y] - args.state.listener.y) ** 2)
+  end
+
+
   # #############################################
   # debugging visuals to aid in seeing what we are doing
 
@@ -44,4 +53,21 @@ def tick args
   args.outputs.solids << args.state.audio_map.map do |key, value|
     [value[:x], value[:y], 10, 10, 155, 0, 0]
   end
+
+  # for each audio dot, also render the angle out as a line of length equal to distance calculation
+  args.outputs.lines << args.state.audio_map.map do |key, value|
+    #if the listen distance is greater than the max distance, render it as a red line
+    if value[:distance] > value[:max_distance]
+      [value[:x] + 5, value[:y] + 5, value[:x] + 5 + value[:distance] * Math.cos(value[:angle]), value[:y] + 5 + value[:distance] * Math.sin(value[:angle]), 255, 0, 0]
+    else
+      [value[:x] + 5, value[:y] + 5, value[:x] + 5 + value[:distance] * Math.cos(value[:angle]), value[:y] + 5 + value[:distance] * Math.sin(value[:angle]), 0, 0, 255]
+    end
+  end
+
+  # render a dot at the listener position with a line showing the angle they are facing
+  args.outputs.solids << [args.state.listener.x, args.state.listener.y, 10, 10, 0, 155, 0]
+  args.state.debug_lineLength ||= 50
+  args.state.debug_lineColor ||= [0, 155, 0]
+  args.outputs.lines << [args.state.listener.x + 5, args.state.listener.y + 5, args.state.listener.x + 5 + args.state.debug_lineLength * Math.cos(args.state.listener.angle), args.state.listener.y + 5 + args.state.debug_lineLength * Math.sin(args.state.listener.angle), *args.state.debug_lineColor]
+
 end
