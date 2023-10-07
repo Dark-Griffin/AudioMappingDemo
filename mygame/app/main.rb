@@ -24,9 +24,9 @@ def tick args
   # each will need an angle value for use later in the system when we calculate the angle from the listener to the sound, and a distance value to control volume.
   # also, we need a max cutoff distance, this is used to give a range for "I can hear this sound", and if distance is greater than this, we don't play the sound.
   args.state.audio_map[:sound1] = { path: 'sounds/splash.wav', x: 100, y: 100, delay: 2.0, angle: 0.0, distance: 0.0, max_distance: 100 }
-  args.state.audio_map[:sound2] = { path: 'sounds/spring.wav', x: 350, y: 400, delay: 1.0, angle: 0.0, distance: 0.0, max_distance: 100 }
-  args.state.audio_map[:sound3] = { path: 'sounds/tada.wav', x: 700, y: 100, delay: 4.0, angle: 0.0, distance: 0.0, max_distance: 100 }
-  args.state.audio_map[:sound4] = { path: 'sounds/tink.wav', x: 650, y: 400, delay: 0.5, angle: 0.0, distance: 0.0, max_distance: 100 }
+  #args.state.audio_map[:sound2] = { path: 'sounds/spring.wav', x: 350, y: 400, delay: 1.0, angle: 0.0, distance: 0.0, max_distance: 100 }
+  #args.state.audio_map[:sound3] = { path: 'sounds/tada.wav', x: 700, y: 100, delay: 4.0, angle: 0.0, distance: 0.0, max_distance: 100 }
+  #args.state.audio_map[:sound4] = { path: 'sounds/tink.wav', x: 650, y: 400, delay: 0.5, angle: 0.0, distance: 0.0, max_distance: 100 }
 
   
   # for each audio in audio_map, set the listening angle from the player position
@@ -43,6 +43,28 @@ def tick args
   # - output sounds and play them based on the above calculations
   # - keep track of ticks per sound so we can play the sounds at the specified delay times
 
+  # for each sound in the audio_map, we need to get the angle between 0 and 180 degrees.  We also need to convert the backwards angles to be positive.  Then we need to store each angle relative to the listener angle so that the final resulting value is a measure of the angle between 0 and 1280 in audio pixel position space instead.
+  args.state.audio_map.each do |key, value|
+    panning_angle = value[:angle] - args.state.listener.angle
+    #flip angle along the axis if it is over 180 degrees in either rotation direction
+    if panning_angle > Math::PI / 2
+      panning_angle = -panning_angle + (Math::PI)
+    end
+    if panning_angle < -Math::PI / 2
+      panning_angle = -panning_angle - (Math::PI)
+    end
+    
+    #convert angle Math::PI /2 to 0 to 1280 range
+    panning_angle = (panning_angle + Math::PI / 2) / Math::PI * 1280
+    #store the angle in the audio_map
+    value[:panning_angle] = panning_angle
+  end
+  
+  # debug, show the panning_angle as a string on screen
+  args.outputs.labels << [640, 550, "panning_angle: #{args.state.audio_map[:sound1][:panning_angle]}", 5, 1]
+  # debug, show listener angle
+  args.outputs.labels << [640, 520, "listener angle: #{args.state.listener.angle}", 5, 1]
+
   # #############################################
   # interactions
 
@@ -52,7 +74,20 @@ def tick args
     args.state.listener.y = args.inputs.mouse.click.point.y
   end
 
-
+  # use arrow keys to rotate listener facing angle
+  if args.inputs.keyboard.key_held.left
+    args.state.listener.angle -= 0.01
+  end
+  if args.inputs.keyboard.key_held.right
+    args.state.listener.angle += 0.01
+  end
+  # correct for angle overflow
+  if args.state.listener.angle > Math::PI
+    args.state.listener.angle -= Math::PI * 2
+  end
+  if args.state.listener.angle < -Math::PI
+    args.state.listener.angle += Math::PI * 2
+  end
 
   # #############################################
   # debugging visuals to aid in seeing what we are doing
