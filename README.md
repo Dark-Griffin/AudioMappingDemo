@@ -10,4 +10,4 @@ Uses demo sounds from Dragon Ruby.
 
 If you make something cool with this, let me know at darkgrif@gmail.com
 
-No need to credit, though it is appreciated.  If you want to, credit me as DarkGriffin.
+No need to credit, MIT licensed.  If you want to credit me anyway, use either Gawain Doell, or DarkGriffin, whichever you prefer is fine.
