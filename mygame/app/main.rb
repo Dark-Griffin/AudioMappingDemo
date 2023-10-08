@@ -51,8 +51,6 @@ def tick args
     end
     #convert our panning angle to an audio panning value between -1 and 1
     panning_angle = panning_angle / (Math::PI / 2)
-    #check to fix bug maybe by dividing by 10 to move decimal over?
-    panning_angle = panning_angle
     #store the panning_angle in our audio map so we can play the correct pan position later.
     value[:panning_angle] = panning_angle
   end
