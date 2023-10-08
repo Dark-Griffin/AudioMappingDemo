@@ -7,3 +7,7 @@ A demo app showing a method for adding audio points to a map, then playing the r
 
 Useful for sound mixing when you have different points of view for the same level/scene/world, such as in Myst slideshow games where from different screens you can hear the same machines/scenery.
 Uses demo sounds from Dragon Ruby.
+
+If you make something cool with this, let me know at darkgrif@gmail.com
+
+No need to credit, though it is appreciated.  If you want to, credit me as DarkGriffin.
