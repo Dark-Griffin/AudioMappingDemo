@@ -21,11 +21,12 @@ def tick args
   # lets define some sounds and where they are in the world
   # we can define this with a sound file path and a position x and y to place them on our map
   # we also define a playback delay, this will control how often the sound is played from that point in space.
+  # delays are in game ticks, so 60 is 1 second, 120 is 2 seconds, etc.  For the sake of demo, this is just all set to 100 ticks.
   # each will need an angle value for use later in the system when we calculate the angle from the listener to the sound, and a distance value to control volume.
   # also, we need a max cutoff distance, this is used to give a range for "I can hear this sound", and if distance is greater than this, we don't play the sound.
   args.state.audio_map[:sound1] ||= { path: 'sounds/splash.wav', x: 100, y: 100, delay: 100.0, angle: 0.0, distance: 0.0, max_distance: 250, last_played_tick: 0 }
   args.state.audio_map[:sound2] ||= { path: 'sounds/spring.wav', x: 350, y: 400, delay: 100.0, angle: 0.0, distance: 0.0, max_distance: 200, last_played_tick: 0 }
-  args.state.audio_map[:sound3] ||= { path: 'sounds/tada.wav', x: 700, y: 100, delay: 100.0, angle: 0.0, distance: 0.0, max_distance: 450, last_played_tick: 0 }
+  args.state.audio_map[:sound3] ||= { path: 'sounds/tada.wav', x: 700, y: 100, delay: 100.0, angle: 0.0, distance: 0.0, max_distance: 350, last_played_tick: 0 }
   args.state.audio_map[:sound4] ||= { path: 'sounds/tink.wav', x: 650, y: 400, delay: 100.0, angle: 0.0, distance: 0.0, max_distance: 300, last_played_tick: 0 }
 
   # for each audio in audio_map, set the listening angle from the player position
@@ -50,6 +51,8 @@ def tick args
     end
     #convert our panning angle to an audio panning value between -1 and 1
     panning_angle = panning_angle / (Math::PI / 2)
+    #check to fix bug maybe by dividing by 10 to move decimal over?
+    panning_angle = panning_angle
     #store the panning_angle in our audio map so we can play the correct pan position later.
     value[:panning_angle] = panning_angle
   end
@@ -70,7 +73,7 @@ def tick args
     value[:volume] = volume
   end
 
-  # update all the sound ticks so we know if they should play this tick or not
+  # update all the sound tick timers so we know if they should play this tick or not
   args.state.audio_map.each do |key, value|
     if value[:last_played_tick] + value[:delay] < args.tick_count
       value[:last_played_tick] = args.tick_count
@@ -83,11 +86,19 @@ def tick args
     if value[:distance] > value[:max_distance]
       next
     end
-    #if the tick_count equals this last_played_tick, then we play the sound
+    #if the tick_count equals this last_played_tick plus the delay of the sound in frames, then we play the sound
     if value[:last_played_tick] + value[:delay] == args.tick_count
       #play the sound with the volume and panning_angle we calculated earlier
-      args.audio[key] = { input: value[:path], gain: value[:volume], x: value[:panning_angle] }
+      args.audio[key] = { input: value[:path], gain: value[:volume], x: value[:panning_angle], y: 1, z: 1}
       puts "playing sound #{key} at volume #{value[:volume]} and panning #{value[:panning_angle]}"
+    end
+  end
+
+  #update panning and volume live as game value changes if a sound is playing
+  args.state.audio_map.each do |key, value|
+    if args.audio[key] != nil
+      args.audio[key].x = value[:panning_angle]
+      args.audio[key].gain = value[:volume]
     end
   end
 
